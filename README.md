@@ -13,3 +13,7 @@ npm install
 npm start      # http://localhost:4200
 npm run build
 ```
+
+## Hosting on GitHub Pages
+Merge to `main`, then in the repo go to Settings → Pages → Source: **GitHub Actions**.
+The workflow in `.github/workflows/deploy.yml` publishes to `https://<user>.github.io/deutsch-lernen/`.
