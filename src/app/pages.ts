@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, ScoreService, USERS, POINTS_PER_SENTENCE, WEEKLY_PRIZE_TARGET } from './services';
 import { TOPICS, RULES, Topic } from './data';
 import { SentenceBuilder } from './sentence-builder';
+import { WordPractice } from './word-practice';
+
+type PracticeMethod = 'sentences' | 'quiz' | 'flashcards';
 
 @Component({
   selector: 'app-login', imports: [FormsModule],
@@ -71,32 +74,49 @@ export class Shell {
 export class Home { auth = inject(AuthService); scores = inject(ScoreService); target = WEEKLY_PRIZE_TARGET; }
 
 @Component({
-  selector: 'app-practice', imports: [SentenceBuilder],
+  selector: 'app-practice', imports: [SentenceBuilder, WordPractice],
   template: `
   @if (!topic()) {
     <h2>Choose a topic</h2>
     <div class="grid">
       @for (t of topics; track t.id) {
-        <button class="card topic" (click)="start(t)"><span class="big">{{ t.icon }}</span><h3>{{ t.name }}</h3><small>{{ t.challenges.length }} sentences</small></button>
+        <button class="card topic" (click)="start(t)"><span class="big">{{ t.icon }}</span><h3>{{ t.name }}</h3><small>{{ activitiesPerMethod }} activities · 3 ways to practise</small></button>
       }
     </div>
-  } @else {
+  } @else if (!method()) {
     <button class="btn" (click)="topic.set(null)">← Topics</button>
-    <h2>{{ topic()!.icon }} {{ topic()!.name }} <small>Score this round: ⭐ {{ round() }}</small></h2>
-    @if (idx() < topic()!.challenges.length) {
-      <p>Sentence {{ idx() + 1 }} / {{ topic()!.challenges.length }}</p>
-      <app-sentence-builder [challenge]="topic()!.challenges[idx()]" (solved)="solved()" />
+    <h2>{{ topic()!.icon }} {{ topic()!.name }}: choose how to practise</h2>
+    <div class="grid">
+      <button class="card topic" (click)="startMethod('quiz')"><span class="big">🧠</span><h3>Word quiz</h3><p>Choose the correct German or English translation.</p><small>{{ activitiesPerMethod }} activities</small></button>
+      <button class="card topic" (click)="startMethod('flashcards')"><span class="big">🃏</span><h3>Flashcards</h3><p>Reveal each word's translation and practise at your own pace.</p><small>{{ activitiesPerMethod }} activities</small></button>
+      <button class="card topic" (click)="startMethod('sentences')"><span class="big">🧩</span><h3>Build sentences</h3><p>Put German words in the right order.</p><small>{{ activitiesPerMethod }} activities</small></button>
+    </div>
+  } @else {
+    <button class="btn" (click)="method.set(null)">← Practice methods</button>
+    <h2>{{ topic()!.icon }} {{ topic()!.name }} · {{ methodName() }} <small>Score this round: ⭐ {{ round() }}</small></h2>
+    @if (idx() < activitiesPerMethod) {
+      <p>Activity {{ idx() + 1 }} / {{ activitiesPerMethod }}</p>
+      @if (method() === 'sentences') {
+        <app-sentence-builder [challenge]="topic()!.challenges[idx() % topic()!.challenges.length]" (solved)="solved()" />
+      } @else {
+        <app-word-practice [words]="topic()!.words" [method]="wordMethod()" [index]="idx()" (solved)="solved()" />
+      }
       @if (done()) { <button class="btn primary pop" (click)="next()">Next ➜</button> }
     } @else {
-      <div class="card finish"><span class="big bounce">🏆</span><h3>Topic finished!</h3><p>You earned {{ round() }} points.</p>
-        <button class="btn primary" (click)="topic.set(null)">Pick another topic</button></div>
+      <div class="card finish"><span class="big bounce">🏆</span><h3>Practice complete!</h3><p>You completed {{ activitiesPerMethod }} activities and earned {{ round() }} points.</p>
+        <button class="btn primary" (click)="method.set(null)">Choose another practice method</button></div>
     }
   }`,
 })
 export class Practice {
   auth = inject(AuthService); scores = inject(ScoreService);
-  topics = TOPICS; topic = signal<Topic | null>(null); idx = signal(0); round = signal(0); done = signal(false);
-  start(t: Topic) { this.topic.set(t); this.idx.set(0); this.round.set(0); this.done.set(false); }
+  topics = TOPICS; activitiesPerMethod = 20;
+  topic = signal<Topic | null>(null); method = signal<PracticeMethod | null>(null);
+  idx = signal(0); round = signal(0); done = signal(false);
+  methodName = computed(() => ({ quiz: 'Word quiz', flashcards: 'Flashcards', sentences: 'Build sentences' }[this.method() ?? 'quiz']));
+  wordMethod = computed<'quiz' | 'flashcards'>(() => this.method() === 'flashcards' ? 'flashcards' : 'quiz');
+  start(t: Topic) { this.topic.set(t); this.method.set(null); this.idx.set(0); this.round.set(0); this.done.set(false); }
+  startMethod(method: PracticeMethod) { this.method.set(method); this.idx.set(0); this.round.set(0); this.done.set(false); }
   solved() { this.done.set(true); this.round.update(r => r + POINTS_PER_SENTENCE); this.scores.add(this.auth.user()!, POINTS_PER_SENTENCE, this.topic()!.name, 'single'); }
   next() { this.done.set(false); this.idx.update(i => i + 1); }
 }
@@ -195,7 +215,7 @@ export class Rules { rules = RULES; }
   <div class="grid three">
     <div class="card stat"><b>{{ scores.total(u()) }}</b>Total points</div>
     <div class="card stat"><b>{{ scores.weekly(u()) }}</b>This week</div>
-    <div class="card stat"><b>{{ scores.count(u()) }}</b>Sentences built</div>
+    <div class="card stat"><b>{{ scores.count(u()) }}</b>Activities completed</div>
   </div>
   <div class="card"><h3>🎁 Weekly prize: {{ scores.prize() }}</h3>
     <div class="bar"><div [style.width.%]="pct()"></div></div>
