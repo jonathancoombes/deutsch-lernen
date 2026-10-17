@@ -2,11 +2,6 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { Word } from './data';
 
 type PracticeMethod = 'quiz' | 'flashcards';
-interface Activity {
-  prompt: string;
-  answer: string;
-  choices: string[];
-}
 
 @Component({
   selector: 'app-word-practice',
