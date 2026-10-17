@@ -6,7 +6,8 @@ import { TOPICS, RULES, Topic } from './data';
 import { SentenceBuilder } from './sentence-builder';
 import { WordPractice } from './word-practice';
 
-type PracticeMethod = 'sentences' | 'quiz' | 'flashcards';
+type ActivityMethod = 'sentences' | 'quiz' | 'flashcards';
+type PracticeMethod = ActivityMethod | 'random';
 
 @Component({
   selector: 'app-login', imports: [FormsModule],
@@ -80,7 +81,7 @@ export class Home { auth = inject(AuthService); scores = inject(ScoreService); t
     <h2>Choose a topic</h2>
     <div class="grid">
       @for (t of topics; track t.id) {
-        <button class="card topic" (click)="start(t)"><span class="big">{{ t.icon }}</span><h3>{{ t.name }}</h3><small>{{ activitiesPerMethod }} activities · 3 ways to practise</small></button>
+        <button class="card topic" (click)="start(t)"><span class="big">{{ t.icon }}</span><h3>{{ t.name }}</h3><small>{{ activitiesPerMethod }} activities · 4 ways to practise</small></button>
       }
     </div>
   } @else if (!method()) {
@@ -90,16 +91,17 @@ export class Home { auth = inject(AuthService); scores = inject(ScoreService); t
       <button class="card topic" (click)="startMethod('quiz')"><span class="big">🧠</span><h3>Word quiz</h3><p>Choose the correct German or English translation.</p><small>{{ activitiesPerMethod }} activities</small></button>
       <button class="card topic" (click)="startMethod('flashcards')"><span class="big">🃏</span><h3>Flashcards</h3><p>Reveal each word's translation and practise at your own pace.</p><small>{{ activitiesPerMethod }} activities</small></button>
       <button class="card topic" (click)="startMethod('sentences')"><span class="big">🧩</span><h3>Build sentences</h3><p>Put German words in the right order.</p><small>{{ activitiesPerMethod }} activities</small></button>
+      <button class="card topic" (click)="startMethod('random')"><span class="big">🎲</span><h3>Random mix</h3><p>Quiz, flashcards and sentences shuffled in a different order every session.</p><small>{{ activitiesPerMethod }} activities</small></button>
     </div>
   } @else {
     <button class="btn" (click)="method.set(null)">← Practice methods</button>
     <h2>{{ topic()!.icon }} {{ topic()!.name }} · {{ methodName() }} <small>Score this round: ⭐ {{ round() }}</small></h2>
     @if (idx() < activitiesPerMethod) {
       <p>Activity {{ idx() + 1 }} / {{ activitiesPerMethod }}</p>
-      @if (method() === 'sentences') {
+      @if (currentMethod() === 'sentences') {
         <app-sentence-builder [challenge]="topic()!.challenges[idx() % topic()!.challenges.length]" (solved)="solved()" />
       } @else {
-        <app-word-practice [words]="topic()!.words" [method]="wordMethod()" [index]="idx()" (solved)="solved()" />
+        <app-word-practice [words]="topic()!.words" [method]="currentMethod() === 'flashcards' ? 'flashcards' : 'quiz'" [index]="idx()" (solved)="solved()" />
       }
       @if (done()) { <button class="btn primary pop" (click)="next()">Next ➜</button> }
     } @else {
@@ -113,10 +115,18 @@ export class Practice {
   topics = TOPICS; activitiesPerMethod = 20;
   topic = signal<Topic | null>(null); method = signal<PracticeMethod | null>(null);
   idx = signal(0); round = signal(0); done = signal(false);
-  methodName = computed(() => ({ quiz: 'Word quiz', flashcards: 'Flashcards', sentences: 'Build sentences' }[this.method() ?? 'quiz']));
-  wordMethod = computed<'quiz' | 'flashcards'>(() => this.method() === 'flashcards' ? 'flashcards' : 'quiz');
+  methodName = computed(() => ({ quiz: 'Word quiz', flashcards: 'Flashcards', sentences: 'Build sentences', random: 'Random mix' }[this.method() ?? 'quiz']));
+  plan = signal<ActivityMethod[]>([]);
+  currentMethod = computed<ActivityMethod>(() => {
+    const m = this.method();
+    return m === 'random' ? (this.plan()[this.idx()] ?? 'quiz') : (m ?? 'quiz');
+  });
+  private makePlan(): ActivityMethod[] {
+    const kinds: ActivityMethod[] = ['quiz', 'flashcards', 'sentences'];
+    return Array.from({ length: this.activitiesPerMethod }, () => kinds[Math.floor(Math.random() * kinds.length)]);
+  }
   start(t: Topic) { this.topic.set(t); this.method.set(null); this.idx.set(0); this.round.set(0); this.done.set(false); }
-  startMethod(method: PracticeMethod) { this.method.set(method); this.idx.set(0); this.round.set(0); this.done.set(false); }
+  startMethod(method: PracticeMethod) { this.plan.set(method === 'random' ? this.makePlan() : []); this.method.set(method); this.idx.set(0); this.round.set(0); this.done.set(false); }
   solved() { this.done.set(true); this.round.update(r => r + POINTS_PER_SENTENCE); this.scores.add(this.auth.user()!, POINTS_PER_SENTENCE, this.topic()!.name, 'single'); }
   next() { this.done.set(false); this.idx.update(i => i + 1); }
 }
