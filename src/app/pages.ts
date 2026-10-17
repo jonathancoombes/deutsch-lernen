@@ -99,7 +99,7 @@ export class Home { auth = inject(AuthService); scores = inject(ScoreService); t
       @if (method() === 'sentences') {
         <app-sentence-builder [challenge]="topic()!.challenges[idx() % topic()!.challenges.length]" (solved)="solved()" />
       } @else {
-        <app-word-practice [words]="topic()!.words" [method]="method()!" [index]="idx()" (solved)="solved()" />
+        <app-word-practice [words]="topic()!.words" [method]="wordMethod()" [index]="idx()" (solved)="solved()" />
       }
       @if (done()) { <button class="btn primary pop" (click)="next()">Next ➜</button> }
     } @else {
@@ -114,6 +114,7 @@ export class Practice {
   topic = signal<Topic | null>(null); method = signal<PracticeMethod | null>(null);
   idx = signal(0); round = signal(0); done = signal(false);
   methodName = computed(() => ({ quiz: 'Word quiz', flashcards: 'Flashcards', sentences: 'Build sentences' }[this.method() ?? 'quiz']));
+  wordMethod = computed<'quiz' | 'flashcards'>(() => this.method() === 'flashcards' ? 'flashcards' : 'quiz');
   start(t: Topic) { this.topic.set(t); this.method.set(null); this.idx.set(0); this.round.set(0); this.done.set(false); }
   startMethod(method: PracticeMethod) { this.method.set(method); this.idx.set(0); this.round.set(0); this.done.set(false); }
   solved() { this.done.set(true); this.round.update(r => r + POINTS_PER_SENTENCE); this.scores.add(this.auth.user()!, POINTS_PER_SENTENCE, this.topic()!.name, 'single'); }
