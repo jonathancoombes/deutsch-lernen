@@ -25,6 +25,7 @@ input { width:100%; padding:.6rem; border-radius:10px; border:2px solid #dfe6e9;
 .slots { background:#f1f2f6; border:2px dashed #b2bec3; align-items:center; } .slots.ok { background:#d5f5e3; border-color:#00b894; animation:pulse .6s; }
 .slots.shake { animation:shake .4s; background:#fadbd8; } .hint { color:#999; }
 .prompt { font-size:1.2rem; } .actions { display:flex; gap:.6rem; justify-content:flex-end; }
+.flash-answer { font-size:1.5rem; font-weight:700; color:var(--accent); }
 .feedback { font-weight:700; margin:.5rem 0 0; } .good { color:#00b894; animation:pop .4s; } .bad { color:#d63031; }
 .big { font-size:3rem; display:block; } .bounce { animation:bounce 1.6s infinite; display:inline-block; }
 .mode,.topic { text-align:center; cursor:pointer; text-decoration:none; color:inherit; border:0; font:inherit; transition:.2s; } .mode:hover,.topic:hover { transform:translateY(-6px) rotate(-1deg); }
