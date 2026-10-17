@@ -25,7 +25,7 @@ interface Activity {
         <p class="prompt">{{ activity().prompt }}</p>
         @if (revealed()) {
           <p class="flash-answer">{{ activity().answer }}</p>
-          <button class="btn primary" (click)="complete()">Next ➜</button>
+          <button class="btn primary" (click)="complete()">Mark complete</button>
         } @else {
           <button class="btn primary" (click)="revealed.set(true)">Show answer</button>
         }
