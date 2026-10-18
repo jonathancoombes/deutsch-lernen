@@ -3,6 +3,7 @@
 Angular app for the family (mom, dad, jamie) to learn German.
 
 - Login: pick a user; the password is the user's name in lowercase (demo only, no real security).
+- Profile pictures: each learner can choose a saved avatar from the profile page.
 - Single player: choose a topic and practise with a 20-activity word quiz, flashcards, or sentence building (+10 points each).
 - Group mode: 2–3 players take turns building sentences.
 - Scorecard per user, weekly leaderboard and prize progress; dictionary and grammar rules.

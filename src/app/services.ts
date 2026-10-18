@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 
 export const USERS = [
   { name: 'mom', label: 'Mom', avatar: '👩', color: '#e84393' },
