@@ -59,6 +59,7 @@ export class Shell {
 @Component({
   selector: 'app-home', imports: [RouterLink],
   template: `
+  <div class="profile-frame" aria-label="Your profile picture">{{ auth.profile()?.avatar }}</div>
   <h2>Willkommen, {{ auth.profile()?.label }}! {{ auth.profile()?.avatar }}</h2>
   <div class="grid two">
     <a class="card mode" routerLink="/practice"><span class="big bounce">🧍</span><h3>Mode 1: Single Player</h3><p>Practice and progress on your own.</p></a>
