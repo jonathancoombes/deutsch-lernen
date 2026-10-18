@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AuthService, ScoreService, USERS, POINTS_PER_SENTENCE, WEEKLY_PRIZE_TARGET } from './services';
+import { AuthService, ScoreService, AVATAR_CATEGORIES, POINTS_PER_SENTENCE, WEEKLY_PRIZE_TARGET } from './services';
 import { TOPICS, RULES, Topic } from './data';
 import { SentenceBuilder } from './sentence-builder';
 import { WordPractice } from './word-practice';
@@ -16,7 +16,7 @@ type PracticeMethod = ActivityMethod | 'random';
     <h1 class="logo">🇩🇪 Deutsch Lernen</h1>
     <p>Who is learning today?</p>
     <div class="avatars">
-      @for (u of users; track u.name) {
+      @for (u of users(); track u.name) {
         <button class="avatar" [class.sel]="sel() === u.name" [style.--c]="u.color" (click)="sel.set(u.name)">
           <span>{{ u.avatar }}</span>{{ u.label }}</button>
       }
@@ -32,7 +32,7 @@ type PracticeMethod = ActivityMethod | 'random';
 })
 export class Login {
   auth = inject(AuthService); router = inject(Router);
-  users = USERS; sel = signal(''); pin = ''; err = signal(false);
+  users = this.auth.users; sel = signal(''); pin = ''; err = signal(false);
   go(e: Event) { e.preventDefault(); if (this.auth.login(this.sel(), this.pin)) this.router.navigateByUrl('/'); else this.err.set(true); }
 }
 
@@ -140,7 +140,7 @@ export class Practice {
     <div class="card">
       <p>Pick 2–3 players:</p>
       <div class="avatars">
-        @for (u of users; track u.name) {
+        @for (u of users(); track u.name) {
           <button class="avatar" [class.sel]="chosen().includes(u.name)" [style.--c]="u.color" (click)="toggle(u.name)"><span>{{ u.avatar }}</span>{{ u.label }}</button>
         }
       </div>
@@ -167,10 +167,10 @@ export class Practice {
   }`,
 })
 export class Group {
-  scores = inject(ScoreService); users = USERS; topics = TOPICS;
+  auth = inject(AuthService); scores = inject(ScoreService); users = this.auth.users; topics = TOPICS;
   chosen = signal<string[]>([]); topic = signal<Topic | null>(null); playing = signal(false);
   round = signal(0); done = signal(false); game = signal<Record<string, number>>({});
-  players = computed(() => USERS.filter(u => this.chosen().includes(u.name)));
+  players = computed(() => this.auth.users().filter(u => this.chosen().includes(u.name)));
   current = computed(() => this.players()[this.round() % this.players().length]);
   total = computed(() => this.players().length * 2);
   toggle(n: string) { this.chosen.update(c => c.includes(n) ? c.filter(x => x !== n) : [...c, n]); }
@@ -223,6 +223,21 @@ export class Rules { rules = RULES; }
   selector: 'app-profile',
   template: `
   <h2>{{ p()?.avatar }} {{ p()?.label }}'s scorecard</h2>
+  <div class="card">
+    <h3>Choose your profile picture</h3>
+    @for (category of avatarCategories; track category.name) {
+      <h4>{{ category.name }}</h4>
+      <div class="avatars">
+        @for (avatar of category.options; track avatar.label) {
+          <button class="avatar" [class.sel]="p()?.avatar === avatar.emoji" [style.--c]="p()?.color"
+            [attr.aria-label]="avatar.label" [attr.aria-pressed]="p()?.avatar === avatar.emoji"
+            (click)="chooseAvatar(avatar.emoji)">
+            <span>{{ avatar.emoji }}</span>{{ avatar.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
   <div class="grid three">
     <div class="card stat"><b>{{ scores.total(u()) }}</b>Total points</div>
     <div class="card stat"><b>{{ scores.weekly(u()) }}</b>This week</div>
@@ -240,6 +255,8 @@ export class Rules { rules = RULES; }
 })
 export class Profile {
   auth = inject(AuthService); scores = inject(ScoreService); target = WEEKLY_PRIZE_TARGET;
+  avatarCategories = AVATAR_CATEGORIES;
   u = () => this.auth.user()!; p = this.auth.profile;
+  chooseAvatar(avatar: string) { this.auth.setAvatar(this.u(), avatar); }
   pct = () => Math.min(100, (this.scores.weekly(this.u()) / this.target) * 100);
 }
