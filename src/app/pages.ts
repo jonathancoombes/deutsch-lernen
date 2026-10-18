@@ -46,7 +46,7 @@ export class Login {
     <a routerLink="/rules" routerLinkActive="act">Rules</a>
     <a routerLink="/profile" routerLinkActive="act">My Scores</a>
     <span class="grow"></span>
-    <span class="me">{{ auth.profile()?.avatar }} {{ auth.profile()?.label }} · ⭐ {{ scores.total(auth.user()!) }}</span>
+    <span class="me"><span class="profile-avatar">{{ auth.profile()?.avatar }}</span>{{ auth.profile()?.label }} · ⭐ {{ scores.total(auth.user()!) }}</span>
     <button class="btn" (click)="out()">Logout</button>
   </nav>
   <main><router-outlet /></main>`,
@@ -59,7 +59,6 @@ export class Shell {
 @Component({
   selector: 'app-home', imports: [RouterLink],
   template: `
-  <div class="profile-frame" aria-label="Your profile picture">{{ auth.profile()?.avatar }}</div>
   <h2>Willkommen, {{ auth.profile()?.label }}! {{ auth.profile()?.avatar }}</h2>
   <div class="grid two">
     <a class="card mode" routerLink="/practice"><span class="big bounce">🧍</span><h3>Mode 1: Single Player</h3><p>Practice and progress on your own.</p></a>
