@@ -44,6 +44,7 @@ export class WordPractice {
   method = input.required<PracticeMethod>();
   index = input.required<number>();
   solved = output<void>();
+  skipped = output<void>();
 
   answered = signal(false);
   selected = signal('');
