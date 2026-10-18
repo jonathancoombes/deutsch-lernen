@@ -43,9 +43,8 @@ input { width:100%; padding:.6rem; border-radius:10px; border:2px solid #636e72;
 @keyframes shake { 25% { transform:translateX(-8px); } 75% { transform:translateX(8px); } }
 @media (max-width:600px) { .grid.two,.grid.three { grid-template-columns:1fr; } }
 
-.profile-frame {
-  position: absolute; top: 12px; left: 12px; width: 64px; height: 64px;
-  display: flex; align-items: center; justify-content: center;
-  background: #fff; border: 3px solid #fff; border-radius: 50%;
-  font-size: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,.25); z-index: 5;
+.me { display:flex; align-items:center; gap:.45rem; }
+.profile-avatar {
+  display:inline-flex; width:2rem; height:2rem; align-items:center; justify-content:center;
+  border:2px solid #fff; border-radius:50%; line-height:1;
 }
